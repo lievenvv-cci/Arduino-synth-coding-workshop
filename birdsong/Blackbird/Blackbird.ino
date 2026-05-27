@@ -135,10 +135,136 @@ void dip (int base_freq, int speed) {
     i=i+speed;
   } 
 
-  trill(i-20, i+20, 30, 4);
+  trill(i, 400, 30, 8);
+}
+
+void swoop (int base_freq) {
+  int i = base_freq + 100;
+  int speed = 10;
+
+  while(i>=base_freq) {
+    if (i%20 == 0) {
+      speed = speed -1;
+      if (speed <=1) speed = 1;
+    }
+
+    fOut = i;                                  // set output frequency in Hz
+    tuningWord = pow(2, 32) * fOut / sampleRate;  // DDS tuning word for target frequency
+    delayMicroseconds(150);
+    i=i-speed;
+  }
+
+  while(i<=base_freq+200) {
+    if (i%20 == 0) {
+      speed = speed +1;
+      speed = 1;
+    }
+
+    fOut = i;                                  // set output frequency in Hz
+    tuningWord = pow(2, 32) * fOut / sampleRate;  // DDS tuning word for target frequency
+    delayMicroseconds(100);
+    i=i+speed;
+  }
+
+  while(i<=base_freq+400) {
+    if (i%20 == 0) {
+      speed = speed-1;
+      if (speed <=1) speed = 1;
+    }
+
+    fOut = i;                                  // set output frequency in Hz
+    tuningWord = pow(2, 32) * fOut / sampleRate;  // DDS tuning word for target frequency
+    delayMicroseconds(100);
+    i=i+speed;
+  }
+
+  while(i>=base_freq+200) {
+    if (i%50 == 0) {
+      speed = speed+1;
+    }
+
+    fOut = i;                                  // set output frequency in Hz
+    tuningWord = pow(2, 32) * fOut / sampleRate;  // DDS tuning word for target frequency
+    delayMicroseconds(150);
+    i=i-speed;
+  }
+
+  while(i>=base_freq) {
+    if (i%20 == 0) {
+      speed = speed -1;
+      if (speed <=1) speed = 1;
+    }
+
+    fOut = i;                                  // set output frequency in Hz
+    tuningWord = pow(2, 32) * fOut / sampleRate;  // DDS tuning word for target frequency
+    delayMicroseconds(150);
+    i=i-speed;
+  }
 }
 
 void hold (int base_freq, int duration){
+
+  vol = 0.0;
+  int i = base_freq;
+  int speed = 10;
+
+  while(i<base_freq + 400) {
+    vol = vol + 0.02;
+    if (vol >= 0.7) vol = 0.7;
+
+    fOut = i;                                  // set output frequency in Hz
+    tuningWord = pow(2, 32) * fOut / sampleRate;  // DDS tuning word for target frequency
+    delayMicroseconds(250);
+    i=i+speed;
+  }
+
+  delayMicroseconds(duration);
+
+  speed = 3;
+
+  while(i>=base_freq) {
+    if (i <= base_freq + 200) {
+      if(i%20 == 0) {
+        speed = speed + 1;
+      }
+      vol = vol - 0.02;
+      if (vol <= 0.0) vol = 0.0;
+    }
+
+    fOut = i;                                  // set output frequency in Hz
+    tuningWord = pow(2, 32) * fOut / sampleRate;  // DDS tuning word for target frequency
+    delayMicroseconds(500);
+    i=i-speed;
+  }
+}
+
+void wibble (int base_freq) {
+  int wait = 1;
+  int i = base_freq + 300;
+  int exp_add = 5;
+
+  // sharp slope up
+  while(i<base_freq + 500) {
+    fOut = i;                                  // set output frequency in Hz
+    tuningWord = pow(2, 32) * fOut / sampleRate;  // DDS tuning word for target frequency
+    delayMicroseconds(1);
+    i=i+exp_add;
+  }
+
+  // fall off slowly then more rapidly
+  while(i>base_freq) {
+    fOut = i;                                  // set output frequency in Hz
+    tuningWord = pow(2, 32) * fOut / sampleRate;  // DDS tuning word for target frequency
+    int exp_add = 8;
+
+    if(i%30 == 0) {
+      exp_add = exp_add + 1;
+      if( exp_add >= 5) exp_add = 5;
+    }
+
+    i=i-exp_add;
+    delayMicroseconds(1);
+  }
 
 }
 
@@ -155,10 +281,25 @@ void loop () {
   hill(1500, 15);
   rest_del(500);
   dip(1200, 15);
-  rest_del(1000);
-  hold(2000, 3000);
+
+
+  rest_del(800);
+  hold(900, 5000);
+  rest_del(400);
+  hold(1300, 1800);
   rest_del(500);
-  hold(1700, 4000);
+ 
+  vol = 0.6;
+  wibble(2800);
+  rest_del(150);
+  wibble(2800);
+  rest_del(150);
+  wibble(2100);
+  rest_del(500);
+
+  // trill(1100, 400, 1, 3);
+  swoop(1100);
+  rest_del(1500);
 }
 
 void TC4_Handler(timer_callback_args_t *p_args)
